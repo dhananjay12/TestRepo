@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.4.3</version>
+    <relativePath/> <!-- lookup parent from repository -->
+  </parent>
+  <groupId>com.example</groupId>
+  <artifactId>test2</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>test2</name>
+  <description>Demo project for Spring Boot</description>
+  <properties>
+    <java.version>11</java.version>
+    <spring-cloud.version>2020.0.1</spring-cloud.version>
+    <!-- jib preset properties -->
+    <jib.from.image>gcr.io/distroless/java-debian10:11</jib.from.image>
+    <jib.to.image>${project.artifactId}</jib.to.image>
+    <jib.to.tags>${project.version},latest</jib.to.tags>
+    <jib.container.ports>8080</jib.container.ports>
+    <image.creation.time>USE_CURRENT_TIMESTAMP</image.creation.time>
+    <!--<jib.container.creationTime>USE_CURRENT_TIMESTAMP</jib.container.creationTime>-->
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-gateway</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-dependencies</artifactId>
+        <version>${spring-cloud.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <profiles>
+    <profile>
+      <id>git-time</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>pl.project13.maven</groupId>
+            <artifactId>git-commit-id-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>initialize</phase>
+              </execution>
+            </executions>
+            <configuration>
+              <generateGitPropertiesFile>false</generateGitPropertiesFile>
+              <includeOnlyProperties>
+                <includeOnlyProperty>^git.commit.time$</includeOnlyProperty>
+              </includeOnlyProperties>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+      <properties>
+        <image.creation.time>${git.commit.time}</image.creation.time>
+        <!--<jib.container.creationTime>${git.commit.time}</jib.container.creationTime>-->
+      </properties>
+    </profile>
+  </profiles>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>com.google.cloud.tools</groupId>
+        <artifactId>jib-maven-plugin</artifactId>
+        <version>2.8.0</version>
+        <executions>
+          <execution>
+            <id>distroless-image</id>
+            <!--<phase>package</phase>-->
+            <goals>
+              <goal>build</goal>
+            </goals>
+            <configuration>
+              <container>
+                <!--<creationTime>USE_CURRENT_TIMESTAMP</creationTime>-->
+                <creationTime>${image.creation.time}</creationTime>
+                <appRoot>/app</appRoot>
+                <entrypoint>
+                  java,-cp,/app/classes:/app/resources:/app/libs/*,com.example.test2.Test1Application
+                </entrypoint>
+                <user>nonroot:nonroot</user>
+                <workingDirectory>/home/nonroot</workingDirectory>
+              </container>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
